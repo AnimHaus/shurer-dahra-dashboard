@@ -39,6 +39,12 @@ export const EMPTY_FORM: ArticleForm = {
 export const API =
   (process.env.NEXT_PUBLIC_BACKEND_API_URL ?? "http://localhost:8000") + "/api/news";
 
+export const GALLERY_API =
+  (process.env.NEXT_PUBLIC_BACKEND_API_URL ?? "http://localhost:8000") + "/api/gallery";
+
+export const FOLDERS_API =
+  (process.env.NEXT_PUBLIC_BACKEND_API_URL ?? "http://localhost:8000") + "/api/gallery-folders";
+
 export const FRONTEND_URL =
   process.env.NEXT_PUBLIC_FRONTEND_URL ?? "http://localhost:3000";
 
