@@ -39,6 +39,12 @@ export const EMPTY_FORM: ArticleForm = {
 export const API =
   (process.env.NEXT_PUBLIC_BACKEND_API_URL ?? "http://localhost:8000") + "/api/news";
 
+export const ANALYTICS_API =
+  (process.env.NEXT_PUBLIC_BACKEND_API_URL ?? "http://localhost:8000") + "/api/analytics";
+
+export interface GeoEntry    { country: string; pct: number }
+export interface DeviceEntry { name: string;    value: number }
+
 export const GALLERY_API =
   (process.env.NEXT_PUBLIC_BACKEND_API_URL ?? "http://localhost:8000") + "/api/gallery";
 

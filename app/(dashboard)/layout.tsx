@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { logoutAction } from "@/app/login/actions";
 
 type NavItem = { path: string; label: string; icon: React.ReactNode };
 
@@ -38,16 +40,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* ── Sidebar ── */}
       <aside className={`${open ? "w-56" : "w-14"} shrink-0 bg-muted border-r border-border flex flex-col transition-all duration-200 overflow-hidden`}>
-        <div className="flex items-center gap-2.5 px-4 py-5 border-b border-border">
-          <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center shrink-0">
-            <span className="text-primary-foreground text-xs font-bold">S</span>
-          </div>
-          {open && (
-            <div className="min-w-0">
-              <p className="text-xs font-bold text-foreground truncate">Shurer Dhara</p>
-              <p className="text-[10px] text-muted-foreground truncate">Editorial</p>
-            </div>
-          )}
+        <div className="flex items-center justify-center gap-2.5 px-4 py-2 border-b border-border">
+          <Image
+            src="/logo.png"
+            alt="Shurer Dhara"
+            width={120}
+            height={40}
+            className={`w-auto object-contain transition-all duration-200 ${open ? "h-10" : "h-6"}`}
+            priority
+          />
         </div>
 
         <nav className="flex-1 px-2 py-3 space-y-0.5">
@@ -65,7 +66,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           })}
         </nav>
 
-        <div className="px-2 pb-3">
+        <div className="px-2 pb-3 flex flex-col gap-1">
+          {/* Logout */}
+          <form action={logoutAction}>
+            <button
+              type="submit"
+              title="Sign out"
+              className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-xl text-sm transition-colors text-foreground/70 hover:bg-destructive/10 hover:text-destructive`}
+            >
+              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              {open && <span className="text-xs font-medium truncate">Sign out</span>}
+            </button>
+          </form>
+
+          {/* Collapse toggle */}
           <Button variant="ghost" size="icon" onClick={() => setOpen(!open)} className="w-full">
             <svg className={`w-4 h-4 transition-transform ${open ? "" : "rotate-180"}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
               <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round"/>

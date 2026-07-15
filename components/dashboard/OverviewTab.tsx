@@ -20,15 +20,20 @@ import {
   viewsChartConfig, geoChartConfig, engagementChartConfig, deviceChartConfig,
 } from "@/lib/dashboard";
 import { PIE_COLORS } from "@/lib/types";
-import type { Article } from "@/lib/types";
+import type { Article, GeoEntry, DeviceEntry } from "@/lib/types";
 
 interface Props {
   articles: Article[];
   loading: boolean;
+  geoData?: GeoEntry[];
+  deviceData?: DeviceEntry[];
 }
 
-export default function OverviewTab({ articles, loading }: Props) {
+export default function OverviewTab({ articles, loading, geoData, deviceData }: Props) {
   const [viewsRange, setViewsRange] = useState<"30d" | "14d" | "7d">("30d");
+
+  const activeGeo    = geoData    && geoData.length    > 0 ? geoData    : GEO_DATA;
+  const activeDevice = deviceData && deviceData.length > 0 ? deviceData : DEVICE_DATA;
 
   const totalViews    = articles.reduce((s, a) => s + (a.views   ?? 0), 0);
   const totalLikes    = articles.reduce((s, a) => s + a.likes,          0);
@@ -98,7 +103,7 @@ export default function OverviewTab({ articles, loading }: Props) {
           </CardHeader>
           <CardContent>
             <ChartContainer config={geoChartConfig} className="h-[200px] w-full">
-              <BarChart accessibilityLayer data={GEO_DATA} layout="vertical" margin={{ left: -20 }}>
+              <BarChart accessibilityLayer data={activeGeo} layout="vertical" margin={{ left: -20 }}>
                 <XAxis type="number" dataKey="pct" hide />
                 <YAxis
                   dataKey="country" type="category"
@@ -145,9 +150,9 @@ export default function OverviewTab({ articles, loading }: Props) {
           <CardContent className="px-2 sm:px-6">
             <ChartContainer config={deviceChartConfig} className="h-[180px] w-full">
               <PieChart>
-                <Pie data={DEVICE_DATA} cx="50%" cy="50%" innerRadius={50} outerRadius={72}
+                <Pie data={activeDevice} cx="50%" cy="50%" innerRadius={50} outerRadius={72}
                   paddingAngle={3} dataKey="value" nameKey="name">
-                  {DEVICE_DATA.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
+                  {activeDevice.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
                 </Pie>
                 <ChartTooltip content={<ChartTooltipContent formatter={(v) => [`${v}%`, ""]} hideLabel />} />
                 <ChartLegend content={<ChartLegendContent nameKey="name" />} />
