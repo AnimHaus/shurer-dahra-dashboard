@@ -50,6 +50,7 @@ export default function GalleryPage() {
   // Upload form — shared metadata applied to all queued files
   const [uploadCaption, setUploadCaption]   = useState("");
   const [uploadCategory, setUploadCategory] = useState("general");
+  const [uploadYear, setUploadYear]         = useState("");
   const [uploadOrder, setUploadOrder]       = useState(0);
   const [uploadActive, setUploadActive]     = useState(true);
   // Per-file queue: each entry has the File + an editable title
@@ -60,6 +61,7 @@ export default function GalleryPage() {
   const [editTitle, setEditTitle]       = useState("");
   const [editCaption, setEditCaption]   = useState("");
   const [editCategory, setEditCategory] = useState("general");
+  const [editYear, setEditYear]         = useState("");
   const [editOrder, setEditOrder]       = useState(0);
   const [editActive, setEditActive]     = useState(true);
 
@@ -96,6 +98,7 @@ export default function GalleryPage() {
       setEditTitle(selected.title);
       setEditCaption(selected.caption ?? "");
       setEditCategory(selected.category);
+      setEditYear((selected as GalleryImage & { year?: string | null }).year ?? "");
       setEditOrder(selected.order);
       setEditActive(selected.active);
     }
@@ -183,6 +186,7 @@ export default function GalleryPage() {
       fd.append("title", item.title.trim() || item.file.name);
       fd.append("caption", uploadCaption);
       fd.append("category", uploadCategory);
+      if (uploadYear.trim()) fd.append("year", uploadYear.trim());
       fd.append("order", String(uploadOrder));
       fd.append("active", String(uploadActive));
       try {
@@ -198,6 +202,7 @@ export default function GalleryPage() {
     setUploadCategory(activeFolderSlug !== "all" ? activeFolderSlug : "general");
     setUploadOrder(0);
     setUploadActive(true);
+    setUploadYear("");
     setUploadProgress(null);
     setUploading(false);
     loadImages();
@@ -213,6 +218,7 @@ export default function GalleryPage() {
         title: editTitle,
         caption: editCaption || null,
         category: editCategory,
+        year: editYear.trim() || null,
         order: editOrder,
         active: editActive,
       }),
@@ -469,6 +475,15 @@ export default function GalleryPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block">Year</label>
+                <input
+                  className={inputCls}
+                  placeholder="e.g. 2024"
+                  value={uploadYear}
+                  onChange={(e) => setUploadYear(e.target.value)}
+                />
+              </div>
+              <div>
                 <label className="text-xs font-semibold text-muted-foreground mb-1 block">Starting Order</label>
                 <input
                   type="number"
@@ -477,17 +492,17 @@ export default function GalleryPage() {
                   onChange={(e) => setUploadOrder(Number(e.target.value))}
                 />
               </div>
-              <div className="flex items-end pb-1">
-                <label className="flex items-center gap-2 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={uploadActive}
-                    onChange={(e) => setUploadActive(e.target.checked)}
-                    className="w-4 h-4 accent-primary"
-                  />
-                  <span className="text-sm text-foreground">Visible on site</span>
-                </label>
-              </div>
+            </div>
+            <div className="flex items-end pb-1">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={uploadActive}
+                  onChange={(e) => setUploadActive(e.target.checked)}
+                  className="w-4 h-4 accent-primary"
+                />
+                <span className="text-sm text-foreground">Visible on site</span>
+              </label>
             </div>
 
             {uploadProgress && (
@@ -528,7 +543,7 @@ export default function GalleryPage() {
                   </div>
                   <div className="flex gap-2 shrink-0">
                     <Button size="sm" variant="outline" onClick={() => setEditMode(true)}>Edit</Button>
-                    <Button size="sm" variant="outline" onClick={() => toggleActive(selected)}>
+                    <Button size="sm" variant="outline" onClick={() => toggleActive(selected!)}>
                       {selected.active ? "Hide" : "Show"}
                     </Button>
                     <Button size="sm" variant="destructive" onClick={() => handleDeleteImage(selected.id)}>Delete</Button>
@@ -573,9 +588,20 @@ export default function GalleryPage() {
                       </select>
                     </div>
                   </div>
-                  <div>
-                    <label className="text-xs font-semibold text-muted-foreground mb-1 block">Caption</label>
-                    <input className={inputCls} value={editCaption} onChange={(e) => setEditCaption(e.target.value)} placeholder="Optional caption" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-semibold text-muted-foreground mb-1 block">Year</label>
+                      <input
+                        className={inputCls}
+                        value={editYear}
+                        onChange={(e) => setEditYear(e.target.value)}
+                        placeholder="e.g. 2024"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-muted-foreground mb-1 block">Caption</label>
+                      <input className={inputCls} value={editCaption} onChange={(e) => setEditCaption(e.target.value)} placeholder="Optional caption" />
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>

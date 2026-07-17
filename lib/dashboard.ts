@@ -59,18 +59,18 @@ export function buildEngagementSeries(articles: Article[]) {
 
 // ─── Static reference data ────────────────────────────────────────────────────
 export const GEO_DATA = [
-  { country: "Bangladesh", pct: 42 },
-  { country: "India",      pct: 22 },
-  { country: "UK",         pct: 11 },
-  { country: "USA",        pct: 9  },
-  { country: "Canada",     pct: 6  },
-  { country: "Others",     pct: 10 },
+  { country: "Bangladesh", pct: 42, count: 0 },
+  { country: "India",      pct: 22, count: 0 },
+  { country: "UK",         pct: 11, count: 0 },
+  { country: "USA",        pct: 9,  count: 0 },
+  { country: "Canada",     pct: 6,  count: 0 },
+  { country: "Others",     pct: 10, count: 0 },
 ];
 
 export const DEVICE_DATA = [
-  { name: "Mobile",  value: 61 },
-  { name: "Desktop", value: 31 },
-  { name: "Tablet",  value: 8  },
+  { name: "Mobile",  value: 61, count: 0 },
+  { name: "Desktop", value: 31, count: 0 },
+  { name: "Tablet",  value: 8,  count: 0 },
 ];
 
 // ─── Chart configs ────────────────────────────────────────────────────────────

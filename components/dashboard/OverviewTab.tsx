@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
-  XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, Label, LabelList,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
@@ -21,6 +21,78 @@ import {
 } from "@/lib/dashboard";
 import { PIE_COLORS } from "@/lib/types";
 import type { Article, GeoEntry, DeviceEntry } from "@/lib/types";
+
+// ── Isolated donut so hover state doesn't re-render sibling charts ────────────
+function DeviceDonut({ data }: { data: DeviceEntry[] }) {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const total = data.reduce((s, d) => s + (d.count ?? 0), 0);
+
+  return (
+    <ChartContainer config={deviceChartConfig} className="h-[180px] w-full">
+      <PieChart>
+        <Pie
+          data={data}
+          cx="50%" cy="50%"
+          innerRadius={50} outerRadius={72}
+          paddingAngle={3}
+          dataKey="value" nameKey="name"
+          onMouseEnter={(_, idx) => setHoveredIdx(idx)}
+          onMouseLeave={() => setHoveredIdx(null)}
+        >
+          {data.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
+          <Label
+            content={({ viewBox }) => {
+              const { cx, cy } = viewBox as { cx: number; cy: number };
+              const hovered = hoveredIdx !== null ? data[hoveredIdx] : null;
+              const mainVal = hovered
+                ? (hovered.count ?? 0) > 0 ? hovered.count!.toLocaleString() : `${hovered.value}%`
+                : total > 0 ? total.toLocaleString() : "—";
+              const subVal = hovered
+                ? (hovered.count ?? 0) > 0 ? "requests" : ""
+                : total > 0 ? "total req" : "no data";
+              return (
+                <text textAnchor="middle">
+                  <tspan x={cx} y={cy - 6} fontSize={14} fontWeight={600} fill="currentColor">
+                    {mainVal}
+                  </tspan>
+                  <tspan x={cx} y={cy + 10} fontSize={10} fill="var(--muted-foreground, #888)">
+                    {subVal}
+                  </tspan>
+                </text>
+              );
+            }}
+          />
+        </Pie>
+        <ChartTooltip content={<ChartTooltipContent
+          formatter={(v, _name, item) => [
+            <span key="v" className="flex gap-3">
+              {(item.payload.count ?? 0) > 0 && (
+                <span>{item.payload.count.toLocaleString()} req</span>
+              )}
+              <span className="text-muted-foreground">{v}%</span>
+            </span>,
+            item.payload.name,
+          ]}
+          hideLabel
+        />} />
+        <ChartLegend content={({ payload }) => (
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-2">
+            {(payload ?? []).map((entry, i) => {
+              const d = data[i];
+              return (
+                <span key={entry.value} className="flex items-center gap-1.5 text-xs">
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
+                  <span className="text-foreground/70">{entry.value}</span>
+                  <span className="font-semibold tabular-nums">{(d?.count ?? 0) > 0 ? (d.count as number).toLocaleString() : `${d?.value ?? 0}%`}</span>
+                </span>
+              );
+            })}
+          </div>
+        )} />
+      </PieChart>
+    </ChartContainer>
+  );
+}
 
 interface Props {
   articles: Article[];
@@ -99,11 +171,11 @@ export default function OverviewTab({ articles, loading, geoData, deviceData }: 
         <Card>
           <CardHeader>
             <CardTitle className="text-sm">Audience Geography</CardTitle>
-            <CardDescription>By country (estimated %)</CardDescription>
+            <CardDescription>By country — last 24 h</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={geoChartConfig} className="h-[200px] w-full">
-              <BarChart accessibilityLayer data={activeGeo} layout="vertical" margin={{ left: -20 }}>
+              <BarChart accessibilityLayer data={activeGeo} layout="vertical" margin={{ left: -20, right: 40 }}>
                 <XAxis type="number" dataKey="pct" hide />
                 <YAxis
                   dataKey="country" type="category"
@@ -112,9 +184,25 @@ export default function OverviewTab({ articles, loading, geoData, deviceData }: 
                   tickFormatter={(v: string) => v.length > 9 ? v.slice(0, 9) + "…" : v}
                 />
                 <ChartTooltip cursor={false}
-                  content={<ChartTooltipContent hideLabel formatter={(v) => [`${v}%`, "Share"]} />}
+                  content={<ChartTooltipContent hideLabel formatter={(v, _name, item) => [
+                    <span key="v" className="flex gap-3">
+                      <span>{item.payload.count != null ? item.payload.count.toLocaleString() + " req" : ""}</span>
+                      <span className="text-muted-foreground">{v}%</span>
+                    </span>,
+                    item.payload.country,
+                  ]} />}
                 />
-                <Bar dataKey="pct" fill="var(--color-pct)" radius={5} />
+                <Bar dataKey="pct" fill="var(--color-pct)" radius={5}>
+                  <LabelList
+                    dataKey="count"
+                    position="right"
+                    style={{ fontSize: 11, fill: "var(--foreground)", fontVariantNumeric: "tabular-nums" }}
+                    formatter={(v) => {
+                      const n = typeof v === "number" ? v : Number(v);
+                      return n > 0 ? n.toLocaleString() : "";
+                    }}
+                  />
+                </Bar>
               </BarChart>
             </ChartContainer>
           </CardContent>
@@ -145,19 +233,10 @@ export default function OverviewTab({ articles, loading, geoData, deviceData }: 
         <Card>
           <CardHeader>
             <CardTitle className="text-sm">Device Split</CardTitle>
-            <CardDescription>Mobile · Desktop · Tablet</CardDescription>
+            <CardDescription>Mobile · Desktop · Tablet — last 24 h</CardDescription>
           </CardHeader>
           <CardContent className="px-2 sm:px-6">
-            <ChartContainer config={deviceChartConfig} className="h-[180px] w-full">
-              <PieChart>
-                <Pie data={activeDevice} cx="50%" cy="50%" innerRadius={50} outerRadius={72}
-                  paddingAngle={3} dataKey="value" nameKey="name">
-                  {activeDevice.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
-                </Pie>
-                <ChartTooltip content={<ChartTooltipContent formatter={(v) => [`${v}%`, ""]} hideLabel />} />
-                <ChartLegend content={<ChartLegendContent nameKey="name" />} />
-              </PieChart>
-            </ChartContainer>
+            <DeviceDonut data={activeDevice} />
           </CardContent>
         </Card>
       </div>
